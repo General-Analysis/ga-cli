@@ -1,20 +1,14 @@
 from pathlib import Path
-import tomlkit
+import tomllib
 from typing import Any
 
-CONFIG_FILE = Path.home() / ".config" / "ga" / "config.toml"
+API_URL = "https://api.generalanalysis.com"
+CONFIG_DIR = Path.home() / ".config" / "ga"
+CONFIG_FILE = CONFIG_DIR / "config.toml"
+API_KEY_FILE = CONFIG_DIR / "api_key"
 
-def get_config():
-    if CONFIG_FILE.exists():
-        with open(CONFIG_FILE) as f:
-            config = tomlkit.load(f)
-    else:
-        config = tomlkit.document()
-    return config
-
-def update_config(key: str, value: Any):
-    config = get_config()
-    config[key] = value
-    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_FILE.write_text(tomlkit.dumps(config))
-
+# load config
+CONFIG: dict[str, Any] = {}
+if CONFIG_FILE.exists():
+    with open(CONFIG_FILE, "rb") as f:
+        CONFIG = tomllib.load(f)
