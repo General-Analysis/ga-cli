@@ -1,5 +1,5 @@
 import typer
-from rich import print
+# from rich import print
 from pathlib import Path
 from typing import Annotated
 import httpx
@@ -11,12 +11,16 @@ from .config import CONFIG, API_URL, CONFIG_DIR, API_KEY_FILE, TOKEN_FILE
 app = typer.Typer()
 
 @app.command()
-def test():
-    print(f"Hello from {__name__}")
-    
-@app.command()
-def signup():
+def login():
+    """
+        Login to ga-cli.
+    """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    # check for existing API Key
+    if API_KEY_FILE.exists():
+        cached_api_key = API_KEY_FILE.read_text()
+        typer.confirm(f"Found cached GA API Key {cached_api_key[:10]}..., are you sure you want to re-login? The cached key will be overwritten.", abort=True)
+
     resp = httpx.get(API_URL + "/auth/device")
     resp.raise_for_status()
     data = resp.json()
@@ -31,24 +35,36 @@ def signup():
         code = resp.status_code
     if code == 200:
         token = resp.json()
-        # cache token
-        TOKEN_FILE.write_text(token)
 
     # make project
     project_name = "ga-cli"
     headers = {"Authorization": f"Bearer {token}"}
-    resp = httpx.post(API_URL + "/projects", json={"name": project_name}, headers=headers)
+    # check if project exists
+    resp = httpx.get(API_URL + f"/projects", params={"project_name": project_name}, headers=headers)
     resp.raise_for_status()
+    if len(resp.json()) == 0:
+        print("Creating new project `ga-cli`...")
+        resp = httpx.post(API_URL + "/projects", json={"name": project_name}, headers=headers)
+        resp.raise_for_status()
+    else:
+        print("Project `ga-cli` already exists. Proceeding...")
     
     # make apikey and cache
-    resp = httpx.post(API_URL + "/api-keys/new", json={"project_name": project_name}, headers=headers)
+    print("Creating new api key...")
+    resp = httpx.post(API_URL + "/api-keys", json={"project_name": project_name}, headers=headers)
     resp.raise_for_status()
 
     api_key = resp.json()
+
+    # cache all creds
+    TOKEN_FILE.write_text(token)
     API_KEY_FILE.write_text(api_key)
     
 @app.command()
-def login(api_key: Annotated[str, typer.Option(prompt=True)]):
+def set_api_key(api_key: Annotated[str, typer.Option(prompt=True)]):
+    """
+        Manually override the GA API key used by the cli.
+    """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     # add api-key
     API_KEY_FILE.write_text(api_key)
@@ -66,9 +82,12 @@ def guard_text(text: str):
     print(response.json())
 
 @app.command()
-def wrap_mcp_config(config_file: Path):
-    assert config_file.suffix == ".json", "Not a json config file!"
-    data: dict[str, Any] = json.loads(config_file.read_text())
+def wrap_mcp_config(mcp_config_file: Path):
+    """
+        Wraps the MCP json config with GA proxy server.
+    """
+    assert mcp_config_file.suffix == ".json", "Not a json config file!"
+    data: dict[str, Any] = json.loads(mcp_config_file.read_text())
     encoded_args: list[str] = []
     for name, server_config in data["mcpServers"].items():
         server_config["name"] = name
