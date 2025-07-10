@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Annotated
 import httpx
 import shutil, json
-from .config import CONFIG, API_URL, API_KEY_FILE
+from typing import Any
+import time
+from .config import CONFIG, API_URL, CONFIG_DIR, API_KEY_FILE, TOKEN_FILE
 
 app = typer.Typer()
 
@@ -13,7 +15,41 @@ def test():
     print(f"Hello from {__name__}")
     
 @app.command()
+def signup():
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    resp = httpx.get(API_URL + "/auth/device")
+    resp.raise_for_status()
+    data = resp.json()
+    print("Open in browser:", data["verification_url"])
+    device_code = data["device_code"]
+
+    code = 202
+    while code == 202:
+        time.sleep(1)
+        resp = httpx.get(API_URL + f"/auth/device/{device_code}")
+        resp.raise_for_status()
+        code = resp.status_code
+    if code == 200:
+        token = resp.json()
+        # cache token
+        TOKEN_FILE.write_text(token)
+
+    # make project
+    project_name = "ga-cli"
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = httpx.post(API_URL + "/projects", json={"name": project_name}, headers=headers)
+    resp.raise_for_status()
+    
+    # make apikey and cache
+    resp = httpx.post(API_URL + "/api-keys/new", json={"project_name": project_name}, headers=headers)
+    resp.raise_for_status()
+
+    api_key = resp.json()
+    API_KEY_FILE.write_text(api_key)
+    
+@app.command()
 def login(api_key: Annotated[str, typer.Option(prompt=True)]):
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     # add api-key
     API_KEY_FILE.write_text(api_key)
 
@@ -32,12 +68,27 @@ def guard_text(text: str):
 @app.command()
 def wrap_mcp_config(config_file: Path):
     assert config_file.suffix == ".json", "Not a json config file!"
+    data: dict[str, Any] = json.loads(config_file.read_text())
+    encoded_args: list[str] = []
+    for name, server_config in data["mcpServers"].items():
+        server_config["name"] = name
+        encoded = json.dumps(server_config, separators=(',', ':'))
+        encoded_args.append(encoded)
 
-    data: dict[str, str | dict] = json.loads(config_file.read_text())
-    shutil.move(config_file, config_file.with_stem(config_file.stem + "_bak"))
+    new_config = {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@"
+        ]
+    }
+    
+    # shutil.move(config_file, config_file.with_stem(config_file.stem + "_bak"))
+
+    
 
     # do a bunch of stuff
-    raise NotImplementedError()
+    # raise NotImplementedError()
 
 def main():
     app()
