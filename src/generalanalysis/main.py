@@ -10,9 +10,9 @@ from .config import API_URL, CONFIG_DIR, API_KEY_FILE, TOKEN_FILE
 
 
 readme = """
-    This is GA cli. I'll manage your credentials to connect to the GA Guardrail server and configures your MCP config files to be protected by injection guardrails.
-    - Run `ga login` to set up GA credentials.
-    - They run `ga configure` to detect your MCP clients (Cursor, Claude Code, ...).
+    This is GA cli. I'll manage your credentials to connect to the GA Guardrail server and configures your MCP config files to be protected by injection guardrails.\n
+    - Run `ga login` to set up GA credentials.\n
+    - They run `ga configure` to detect your MCP clients (Cursor, Claude Code, ...).\n
 """
 
 app = typer.Typer(help=readme)
