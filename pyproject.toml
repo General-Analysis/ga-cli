@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Alan Wu", email = "alan@omni-research.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.8"
 dependencies = [
     "httpx>=0.28.1",
     "mcp>=1.10.1",

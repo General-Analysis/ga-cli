@@ -1,13 +1,12 @@
 import typer
 from rich import print as rprint
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional, Dict, Any
 import httpx
 import shutil, json
-from typing import Any
 import time
 from datetime import datetime
-from .config import CONFIG, API_URL, CONFIG_DIR, API_KEY_FILE, TOKEN_FILE
+from .config import API_URL, CONFIG_DIR, API_KEY_FILE, TOKEN_FILE
 
 app = typer.Typer()
 
@@ -86,7 +85,7 @@ def guard_text(text: str):
 
 def _wrap_mcp_config(mcp_config_file: Path, npx_command: str="npx"):
     assert mcp_config_file.suffix == ".json", "Not a json config file!"
-    data: dict[str, Any] = json.loads(mcp_config_file.read_text())
+    data: Dict[str, Any] = json.loads(mcp_config_file.read_text())
     new_config = {}
     is_changed = False
     if "mcpServers" not in data:
@@ -122,7 +121,7 @@ def _wrap_mcp_config(mcp_config_file: Path, npx_command: str="npx"):
         rprint(f"{mcp_config_file} is already configured!")
 
 @app.command()
-def configure(mcp_config_file: Annotated[Path | None, typer.Argument(help="The MCP config file (e.g. mcp.json) to configure. Leave empty to look for common MCP clients.")]=None, npx_command: Annotated[str, typer.Option(help="Replacement npx command, e.g. `bunx`")]="npx"):
+def configure(mcp_config_file: Annotated[Optional[Path], typer.Argument(help="The MCP config file (e.g. mcp.json) to configure. Leave empty to look for common MCP clients.")]=None, npx_command: Annotated[str, typer.Option(help="Replacement npx command, e.g. `bunx`")]="npx"):
     """
         Wraps the MCP json config with GA proxy server.
     """
