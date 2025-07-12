@@ -8,7 +8,14 @@ import time
 from datetime import datetime
 from .config import API_URL, CONFIG_DIR, API_KEY_FILE, TOKEN_FILE
 
-app = typer.Typer()
+
+readme = """
+    This is GA cli. I'll manage your credentials to connect to the GA Guardrail server and configures your MCP config files to be protected by injection guardrails.
+    - Run `ga login` to set up GA credentials.
+    - They run `ga configure` to detect your MCP clients (Cursor, Claude Code, ...).
+"""
+
+app = typer.Typer(help=readme)
 
 @app.command()
 def login():
