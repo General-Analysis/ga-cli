@@ -1,6 +1,6 @@
 [project]
 name = "generalanalysis"
-version = "0.1.6"
+version = "0.1.7"
 description = "MCP Client Guardrails"
 readme = "README.md"
 authors = [
