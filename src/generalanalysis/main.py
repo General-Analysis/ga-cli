@@ -102,7 +102,7 @@ def _wrap_mcp_config(mcp_config_file: Path, npx_command: str="npx"):
             new_config[name] = server_config
             continue
         rprint("Configuring", name)
-        server_config["name"] = name
+        server_config["name"] = name.replace(" ", "")
         encoded = json.dumps([server_config], separators=(',', ':'))
         new_config[f"protected-{name}"] = {
             "command": npx_command,
