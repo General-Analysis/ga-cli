@@ -103,6 +103,10 @@ def _wrap_mcp_config(mcp_config_file: Path, npx_command: str="npx"):
             continue
         rprint("Configuring", name)
         server_config["name"] = name.replace(" ", "")
+        # special case where args are in command
+        if "command" in server_config and  "args" not in server_config:
+            chunks = server_config["command"].split(" ")
+            server_config["command"], server_config["args"] = chunks[0], chunks[1:]
         encoded = json.dumps([server_config], separators=(',', ':'))
         new_config[f"protected-{name}"] = {
             "command": npx_command,
