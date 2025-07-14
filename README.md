@@ -1,4 +1,10 @@
 # ga-cli
+
+## Installation
+`uv tool install generalanalysis` or `pip install generalanalysis`.
+
+## Usage
+
 `ga login` to register a ga account and setup an API key.
 
 `ga configure` to detect installed MCP clients (Cursor, Claude Code, Claude Desktop) and wrap the MCP configs with GA mcp guardrails.
