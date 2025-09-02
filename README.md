@@ -1,7 +1,7 @@
 # ga-cli
 
 ## Installation
-`uv tool install generalanalysis` or `pip install generalanalysis`.
+`uv tool install generalanalysis==0.1.7` or `pip install generalanalysis==0.1.7`.
 
 ## Usage
 
